@@ -133,7 +133,7 @@ Formatted JSON:
   "level": " INFO",
   "message": "This is an INFO message.",
   "logger_name": "prod_app",
-  "pathname": "/path/to/your/prod_app/main.py",
+  "pathname": "path/to/prod_app/main.py",
   "line": 20,
   "function": "main",
   "exception": null,
@@ -150,16 +150,19 @@ You can also manage configurations in a file, which is ideal for different envir
 
 ```json
 {
-  "level": "INFO",
+  "level": "DEBUG",
   "console": {
+    "enabled": true,
     "level": "INFO",
-    "format": "color"
+    "format": "color" // or "text"
   },
   "file": {
     "enabled": true,
-    "path": "logs/production.jsonl",
-    "level": "INFO",
-    "format": "json"
+    "path": "path/to/logs/app.jsonl",
+    "level": "DEBUG",
+    "format": "json",
+    "max_bytes": 10485760,
+    "backup_count": 5
   }
 }
 ```
@@ -170,16 +173,12 @@ You can also manage configurations in a file, which is ideal for different envir
 from slogit import StructuredLogger, LogConfig
 
 # Load the configuration from the file
-
-config = LogConfig.load("config.json")
+config = LogConfig.load("path/to/config.json")
 
 # Initialize the logger with the loaded config
+slog = StructuredLogger(name="from_file_app", config=config)
 
-logger_wrapper = StructuredLogger(name="from_file_app", config=config)
-log = logger_wrapper.get_logger()
-
-log.info("This logger was configured from a file.")
-
+slog("This logger was configured from a file.")
 ```
 
 ## Running Tests
