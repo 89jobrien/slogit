@@ -189,6 +189,14 @@ This project uses `pytest` for testing. To run the test suite, execute the follo
 uv run pytest
 ```
 
+## Todo
+
+- Add context handlers
+- Finish async handler
+- Switch to `rich` for console output
+- Add decorators
+- Add more configuration options
+
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
