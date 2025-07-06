@@ -39,6 +39,30 @@ class StructuredLogger:
         """Provides a user-friendly string representation."""
         return f"StructuredLogger for '{self.name}' writing to {len(self.logger.handlers)} handlers."
 
+    def __getattr__(self, name: str):
+        """
+        Delegates attribute access to the underlying logger instance.
+        This allows calling methods like .info(), .debug(), etc., directly
+        on the StructuredLogger instance.
+
+        Example:
+            slog = StructuredLogger()
+            slog.info("This works!")
+            slog.debug("So does this!")
+        """
+        return getattr(self.logger, name)
+
+    def __call__(self, msg: object, *args, **kwargs):
+        """
+        Allows the StructuredLogger instance to be called directly as a shortcut
+        for logging at the INFO level.
+
+        Example:
+            slog = StructuredLogger()
+            slog("This is an info message.")
+        """
+        self.logger.info(msg, *args, **kwargs)
+
     def _setup_logger(self):
         """Configures the logger using logging.config.dictConfig."""
         # Clear existing handlers from this specific logger to avoid duplication
