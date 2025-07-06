@@ -1,7 +1,7 @@
 [project]
 name = "slogit"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.1"
+description = "Slogit is a logging library for Python that makes structured, configurable logging simple and intuitive."
 readme = "README.md"
 authors = [
     { name = "jprobrien", email = "98370624+89jobrien@users.noreply.github.com" },
