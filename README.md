@@ -2,6 +2,8 @@
 
 Slogit is a logging library for Python that makes structured, configurable logging simple and intuitive.
 
+Disclaimer: This is a work in progress and not intended for production applications yet.
+
 ## Features
 
 - Structured JSON Logging: Automatically formats logs into JSON lines (`.jsonl`), perfect for log aggregation services like Datadog, Splunk, or the ELK stack.
