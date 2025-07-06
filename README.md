@@ -67,7 +67,7 @@ slog("This is a shortcut for an info log.")
 
 The code above would produce a clean, readable console output like this:
 
-![](data/image.png)
+![](data/terminal-output1.jpg)
 
 To see the exception, use `exc_info=True':
 
