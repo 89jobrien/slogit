@@ -90,7 +90,7 @@ slogger("Hello, World! I'm super easy!")
 ```
 
 ```text
-ℹ️ INFO     | your_app.your_module:your_function:22 - Hello, World! I'm super easy!
+ℹ️ INFO     | logger_name.module_name:function_name:22 - Hello, World! I'm super easy!
 ```
 
 ## Configuration
