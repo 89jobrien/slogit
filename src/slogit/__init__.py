@@ -1,3 +1,6 @@
-from .logger import LogConfig, StructuredLogger
+from .config import ConsoleConfig, FileConfig, LogConfig
+from .logger import StructuredLogger
 
-__all__ = ["StructuredLogger", "LogConfig"]
+slogger = StructuredLogger()
+
+__all__ = ["StructuredLogger", "LogConfig", "FileConfig", "ConsoleConfig", "slogger"]

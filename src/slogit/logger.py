@@ -8,72 +8,56 @@ import sys
 from pathlib import Path
 
 from slogit.config import LogConfig
-from slogit.constants import DEFAULT_LOG_FORMAT
 from slogit.formatters import ColoredFormatter, JSONFormatter
+from slogit.levels import LEVELS
 
 
 class StructuredLogger:
     """
-    An object-oriented wrapper for the standard logging module that simplifies
-    configuration and provides utility methods for log management.
+    An object-oriented wrapper for the standard logging module that supports
+    custom levels, environment variable configuration, and a fluent API.
     """
 
     def __init__(self, name: str = __name__, config: LogConfig | None = None):
-        """
-        Initializes and configures a logger instance.
-
-        Args:
-            name: The name of the logger, typically __name__.
-            config: A LogConfig object. If None, a default config is used.
-        """
         self.name = name
         self.config = config or LogConfig()
         self.logger = logging.getLogger(self.name)
+
+        self._register_levels()
         self._setup_logger()
 
+    def _register_levels(self):
+        """Registers the custom levels with the logging module."""
+        for level in LEVELS:
+            logging.addLevelName(level.no, level.name)
+
     def __repr__(self) -> str:
-        """Provides an unambiguous string representation for developers."""
         return f"StructuredLogger(name='{self.name}', level='{self.config.level}')"
 
-    def __str__(self) -> str:
-        """Provides a user-friendly string representation."""
-        return f"StructuredLogger for '{self.name}' writing to {len(self.logger.handlers)} handlers."
+    def __call__(self, msg: object, *args, **kwargs):
+        self.logger.info(msg, *args, stacklevel=2, **kwargs)
 
     def __getattr__(self, name: str):
-        """
-        Delegates attribute access to the underlying logger instance.
-        This allows calling methods like .info(), .debug(), etc., directly
-        on the StructuredLogger instance.
-
-        Example:
-            slog = StructuredLogger()
-            slog.info("This works!")
-            slog.debug("So does this!")
-        """
         return getattr(self.logger, name)
-
-    def __call__(self, msg: object, *args, **kwargs):
-        """
-        Allows the StructuredLogger instance to be called directly as a shortcut
-        for logging at the INFO level.
-
-        Example:
-            slog = StructuredLogger()
-            slog("This is an info message.")
-        """
-        self.logger.info(msg, *args, **kwargs)
 
     def _setup_logger(self):
         """Configures the logger using logging.config.dictConfig."""
-        # Clear existing handlers from this specific logger to avoid duplication
         if self.logger.hasHandlers():
             self.logger.handlers.clear()
 
         handlers = {}
         formatters = {
             "json": {"()": JSONFormatter},
-            "color": {"()": ColoredFormatter, "fmt": DEFAULT_LOG_FORMAT},
-            "text": {"()": logging.Formatter, "fmt": DEFAULT_LOG_FORMAT},
+            "color": {
+                "()": ColoredFormatter,
+                "fmt": "{levelname: <8} | {name}:{funcName}:{lineno} - {message}",
+                "style": "{",
+            },
+            "text": {
+                "()": logging.Formatter,
+                "fmt": "{levelname: <8} | {name}:{funcName}:{lineno} - {message}",
+                "style": "{",
+            },
         }
 
         if self.config.console.enabled:
@@ -104,11 +88,39 @@ class StructuredLogger:
                 self.name: {
                     "level": self.config.level.upper(),
                     "handlers": list(handlers.keys()),
-                    "propagate": False,  # Prevents logs from going to the root logger
+                    "propagate": False,
                 }
             },
         }
         logging.config.dictConfig(logging_config)
+
+    def trace(self, msg: object, *args, **kwargs):
+        """Logs a message with severity 'TRACE' on this logger."""
+        self.logger.log(LEVELS[0].no, msg, *args, stacklevel=2, **kwargs)
+
+    def debug(self, msg: object, *args, **kwargs):
+        """Logs a message with severity 'DEBUG' on this logger."""
+        self.logger.debug(msg, *args, stacklevel=2, **kwargs)
+
+    def info(self, msg: object, *args, **kwargs):
+        """Logs a message with severity 'INFO' on this logger."""
+        self.logger.info(msg, *args, stacklevel=2, **kwargs)
+
+    def success(self, msg: object, *args, **kwargs):
+        """Logs a message with severity 'SUCCESS' on this logger."""
+        self.logger.log(LEVELS[3].no, msg, *args, stacklevel=2, **kwargs)
+
+    def warning(self, msg: object, *args, **kwargs):
+        """Logs a message with severity 'WARNING' on this logger."""
+        self.logger.warning(msg, *args, stacklevel=2, **kwargs)
+
+    def error(self, msg: object, *args, **kwargs):
+        """Logs a message with severity 'ERROR' on this logger."""
+        self.logger.error(msg, *args, stacklevel=2, **kwargs)
+
+    def critical(self, msg: object, *args, **kwargs):
+        """Logs a message with severity 'CRITICAL' on this logger."""
+        self.logger.critical(msg, *args, stacklevel=2, **kwargs)
 
     def get_logger(self) -> logging.Logger:
         """Returns the underlying standard library logger instance."""

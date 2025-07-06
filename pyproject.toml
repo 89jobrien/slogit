@@ -1,6 +1,6 @@
 [project]
 name = "slogit"
-version = "0.1.1"
+version = "0.1.2"
 description = "Slogit is a logging library for Python that makes structured, configurable logging simple and intuitive."
 readme = "README.md"
 authors = [
@@ -37,3 +37,9 @@ build-backend = "hatchling.build"
 [project.urls]
 Homepage = "https://github.com/89jobrien/slogit"
 Repository = "https://github.com/89jobrien/slogit"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+addopts = "-v --cov=slogit --cov-report=term-missing"

@@ -15,82 +15,114 @@ Slogit is a logging library for Python that makes structured, configurable loggi
 
 This project uses `uv` for package and environment management.
 
-1. Clone the repository
+### PyPI
+
+`slogit` is available on PyPI. To install it in your project, run:
+
+```bash
+uv add slogit
+```
+
+### GitHub
+
+Or clone the `slogit` repository from github:
 
 ```bash
 git clone https://github.com/89jobrien/slogit
 cd slogit
 ```
 
-2. Create a virtual environment and install dependencies:
-
 ```bash
 uv venv
 uv sync
 ```
 
-This will install all necessary dependencies listed in pyproject.toml.
+This will install all necessary dependencies listed in `pyproject.toml`.
 
 ## Quick Start
 
-Using `slogit` is designed to be straightforward.
-Instantiate the StructuredLogger with a name and an optional configuration, and then use the standard logging interface.
+Using slogit is designed to be as simple as possible. Instantiate the `StructuredLogger`, and you're ready to go.
 
 ```python
 # main.py
-from pathlib import Path
-from slogit import StructuredLogger, LogConfig, ConsoleConfig, FileConfig
+from slogit import StructuredLogger
 
-# 1. Define a configuration (or use the default)
-my_config = LogConfig(
-    level="DEBUG",
-    console=ConsoleConfig(level="INFO", format="color"),
-    file=FileConfig(level="DEBUG", format="json", path=Path("logs/app.jsonl")),
-)
+# 1. Instantiate the logger. That's it!
+slog = StructuredLogger(name="my_awesome_app")
 
-# 2. Instantiate the logger
-# This sets up all handlers and formatters based on the config
-logger_wrapper = StructuredLogger(name="my_app", config=my_config)
-
-## 3. Get the underlying logger instance to use in your application
-log = logger_wrapper.get_logger()
-
-
-## 4. Log messages
-log.info("Application starting up.")
-log.debug("This is a detailed debug message for the file.")
-log.warning("API key is not set, using a default value.")
-log.error(
-    "Failed to connect to the database.",
-    extra={"db_host": "localhost", "port": 5432}
-)
+# 2. Log messages with the clean, direct API!
+slog.info("Application starting up.")
+slog.debug("Connecting to the database at host: 'localhost'.")
+slog.success("Database connection established successfully!")
+slog.warning("API key is not set; using a default value.")
 
 try:
     1 / 0
 except ZeroDivisionError:
-    log.critical("A critical error occurred!", exc_info=True)
+    slog.error("A critical error occurred while processing a request!")
 
-print("✅ Logging complete. Check the console and 'logs/app.jsonl'.")
+# You can even call the logger instance directly for a quick info log:
+slog("This is a shortcut for an info log.")
+```
+
+The code above would produce a clean, readable console output like this:
+
+![](data/image.png)
+
+To see the exception, use `exc_info=True':
+
+```python
+try:
+    1 / 0
+except ZeroDivisionError:
+    slog.error("A critical error occurred while processing a request!", exc_info=True)
+```
+
+## Super Quick Start
+
+I made the  `slogger` to make things even simpler:
+
+```python
+from slogit import slogger
+slogger("Hello, World! I'm super easy!")
+```
+
+```text
+ℹ️ INFO     | your_app.your_module:<module>:22 - Hello, World! I'm super easy!
 ```
 
 ## Configuration
 
-Logging behavior is controlled by the `LogConfig` Pydantic model. You can configure it programmatically (as above) or by loading it from a JSON file.
-
-### Programmatic Configuration
-
-Create an instance of `LogConfig` and pass it to the `StructuredLogger`.
+For more control, you can pass a `LogConfig` object during instantiation. This allows you to change log levels, file paths, formats, and more.
 
 ```python
-from slogit import LogConfig, ConsoleConfig, FileConfig
+from pathlib import Path
+from slogit import StructuredLogger, LogConfig, ConsoleConfig, FileConfig
 
-# Disable file logging and only show warnings on the console
-
-prod_config = LogConfig(
-    level="WARNING",
-    console=ConsoleConfig(level="WARNING", format="text"),
-    file=FileConfig(enabled=False)
+# Create a custom configuration for a production environment
+custom_config = LogConfig(
+    level="INFO",  # Set the root level to INFO
+    console=ConsoleConfig(level="INFO", format="text"), # Use plain text in console
+    file=FileConfig(
+        enabled=True,
+        level="INFO",
+        path=Path("logs/your_app.jsonl"), # Log to a specific file path
+    )
 )
+slog = StructuredLogger(name="my_awesome_app", config=custom_config)
+
+
+def main():
+    slog.info("This is an INFO message.")
+if __name__ == "__main__":
+    main()
+
+```
+
+Output in `logs/your_app.jsonl`:
+
+```json
+{"timestamp":"2025-07-06T04:36:49.884610Z","level":" INFO","message":"This is an INFO message.","logger_name":"prod_app","pathname":"/path/to/your/app/main.py","line":20,"function":"main","exception":null,"stack_info":null,"extra":{"message":"This is an INFO message."}}
 ```
 
 ### Loading from a File

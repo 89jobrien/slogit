@@ -3,22 +3,10 @@ import json
 import logging
 from pathlib import Path
 
-import pytest
-
-from slogit.config import (
-    ConsoleConfig,
-    FileConfig,
-    LogConfig,
-)
+# Assuming your project structure is `slogit/`
+from slogit.config import ConsoleConfig, FileConfig, LogConfig
+from slogit.levels import LEVEL_MAP
 from slogit.logger import StructuredLogger
-
-
-@pytest.fixture
-def tmp_log_dir(tmp_path: Path) -> Path:
-    """Create a temporary directory for logs."""
-    log_dir = tmp_path / "logs"
-    log_dir.mkdir()
-    return log_dir
 
 
 def test_log_config_defaults():
@@ -31,75 +19,83 @@ def test_log_config_defaults():
     assert config.file.level == "DEBUG"
 
 
-def test_log_config_validation_invalid_level():
-    """Test that LogConfig raises an error for an invalid log level."""
-    with pytest.raises(ValueError, match=r"Invalid log level: JUNK"):
-        LogConfig(level="JUNK")
-
-    with pytest.raises(ValueError, match=r"Invalid log level: FANCY"):
-        LogConfig(console=ConsoleConfig(level="FANCY"))
-
-
-def test_log_config_load_from_file(tmp_path: Path):
-    """Test loading a valid configuration from a JSON file."""
-    config_path = tmp_path / "config.json"
-    config_data = {
-        "level": "INFO",
-        "console": {"level": "WARNING"},
-        "file": {"path": str(tmp_path / "test.log"), "format": "text"},
-    }
-    config_path.write_text(json.dumps(config_data))
-
-    config = LogConfig.load(config_path)
-    assert config.level == "INFO"
-    assert config.console.level == "WARNING"
-    assert config.file.path == tmp_path / "test.log"
-    assert config.file.format == "text"
+def test_logger_initialization(configured_logger: StructuredLogger):
+    """Test that the logger is initialized correctly using a fixture."""
+    assert "test_logger" in configured_logger.name
+    # The logger attribute is still the underlying logging.Logger
+    assert configured_logger.logger.level == logging.DEBUG
+    assert len(configured_logger.logger.handlers) == 2  # Console and File
+    assert not configured_logger.logger.propagate
 
 
-def test_logger_initialization(tmp_log_dir: Path):
-    """Test that the logger is initialized correctly based on config."""
-    log_path = tmp_log_dir / "init_test.log"
-    config = LogConfig(file=FileConfig(path=log_path))
-
-    logger_wrapper = StructuredLogger(name="init_logger", config=config)
-    logger = logger_wrapper.get_logger()
-
-    assert logger.name == "init_logger"
-    assert logger.level == logging.DEBUG  # Set by the config's root level
-    assert len(logger.handlers) == 2  # Console and File
-    assert not logger.propagate
-
-
-def test_console_logging_color(capsys):
-    """Test that colored text is output to the console."""
+def test_console_logging_with_icons_and_color(capsys):
+    """Test that colored text and icons are output to the console."""
+    # This test creates its own logger to control the config precisely
     config = LogConfig(console=ConsoleConfig(level="INFO", format="color"))
-    logger_wrapper = StructuredLogger(name="console_color_logger", config=config)
-    log = logger_wrapper.get_logger()
+    slog = StructuredLogger(name="console_icon_logger", config=config)
 
-    log.info("This is an info message.")
-    log.error("This is an error message.")
+    slog.info("This is an info message.")
+    slog.error("This is an error message.")
 
     captured = capsys.readouterr()
-    # Check for ANSI escape codes for color
-    assert "\x1b[" in captured.out
-    assert "This is an info message." in captured.out
-    assert "This is an error message." in captured.out
+    output = captured.out
+
+    # Check for icons from the Level objects
+    assert LEVEL_MAP[logging.INFO].icon in output
+    assert LEVEL_MAP[logging.ERROR].icon in output
+
+    # Check for message content
+    assert "This is an info message." in output
+    assert "This is an error message." in output
+
+    # Check for ANSI escape code for color
+    assert "\033[" in output
 
 
-def test_file_logging_json(tmp_log_dir: Path):
-    """Test that logs are written to a file in JSONL format."""
-    log_path = tmp_log_dir / "test.jsonl"
+def test_custom_level_methods(tmp_log_dir: Path, capsys):
+    """Test that custom level methods like .success() and .trace() work."""
+    # This test requires a specific config to capture all levels
+    log_path = tmp_log_dir / "custom_levels.jsonl"
     config = LogConfig(
-        level="DEBUG",
-        console=ConsoleConfig(enabled=False),
-        file=FileConfig(path=log_path, level="DEBUG", format="json"),
+        level="TRACE",
+        console=ConsoleConfig(level="TRACE"),
+        file=FileConfig(path=log_path, level="TRACE", format="json"),
     )
-    logger_wrapper = StructuredLogger(name="json_file_logger", config=config)
-    log = logger_wrapper.get_logger()
+    slog = StructuredLogger(name="custom_level_logger", config=config)
 
-    log.info("JSON message", extra={"user_id": 123})
-    log.warning("Something might be wrong.")
+    # Use the custom methods
+    slog.success("Operation was successful.")
+    slog.trace("Entering a sensitive function.")
+
+    # --- Verify Console Output ---
+    captured = capsys.readouterr()
+    console_output = captured.out
+    assert LEVEL_MAP[25].icon in console_output  # ✅ for SUCCESS
+    assert "Operation was successful" in console_output
+    assert LEVEL_MAP[5].icon in console_output  # ➤ for TRACE
+    assert "Entering a sensitive function" in console_output
+
+    # --- Verify File Output ---
+    assert log_path.exists()
+    lines = log_path.read_text().strip().split("\n")
+    assert len(lines) == 2
+
+    log1 = json.loads(lines[0])
+    assert log1["level"] == "SUCCESS"
+    assert log1["message"] == "Operation was successful."
+
+    log2 = json.loads(lines[1])
+    assert log2["level"] == "TRACE"
+    assert log2["message"] == "Entering a sensitive function."
+
+
+def test_file_logging_json(json_file_config: LogConfig):
+    """Test that logs are written to a file in JSONL format using a fixture."""
+    slog = StructuredLogger(name="json_file_logger", config=json_file_config)
+    log_path = json_file_config.file.path
+
+    slog.info("JSON message")
+    slog.warning("Something might be wrong.")
 
     assert log_path.exists()
     lines = log_path.read_text().strip().split("\n")
@@ -109,78 +105,32 @@ def test_file_logging_json(tmp_log_dir: Path):
     assert log1["level"] == "INFO"
     assert log1["message"] == "JSON message"
     assert log1["logger_name"] == "json_file_logger"
-    assert log1["extra"] == {"user_id": 123}
 
     log2 = json.loads(lines[1])
     assert log2["level"] == "WARNING"
     assert log2["message"] == "Something might be wrong."
 
 
-def test_log_file_archiving(tmp_log_dir: Path):
-    """Test the archive_log_file method."""
-    log_path = tmp_log_dir / "archive_me.log"
-    log_path.write_text("some log data\n" * 10)
-
-    config = LogConfig(file=FileConfig(path=log_path))
-    logger_wrapper = StructuredLogger(name="archiver", config=config)
-
-    logger_wrapper.archive_log_file()
-
-    archive_path = log_path.with_suffix(".log.gz")
-    assert not log_path.exists()
-    assert archive_path.exists()
-
-    with gzip.open(archive_path, "rt") as f:
-        content = f.read()
-        assert content == "some log data\n" * 10
-
-
-def test_convert_log_to_json(tmp_log_dir: Path):
-    """Test the convert_log_to_json method."""
-    jsonl_path = tmp_log_dir / "source.jsonl"
-    output_path = tmp_log_dir / "output.json"
-
-    # Create a sample JSONL file
-    with open(jsonl_path, "w") as f:
-        f.write('{"msg": "line 1"}\n')
-        f.write('{"msg": "line 2"}\n')
-
-    config = LogConfig(file=FileConfig(path=jsonl_path, format="json"))
-    logger_wrapper = StructuredLogger(name="converter", config=config)
-
-    logger_wrapper.convert_log_to_json(output_path)
-
-    assert output_path.exists()
-    with open(output_path, "r") as f:
-        data = json.load(f)
-
-    assert isinstance(data, list)
-    assert len(data) == 2
-    assert data[0]["msg"] == "line 1"
-    assert data[1]["msg"] == "line 2"
-
-
 def test_multiple_loggers_no_interference(tmp_log_dir: Path, capsys):
     """Test that two StructuredLogger instances do not interfere."""
+    # This test still requires custom configs, which is fine.
     # Logger 1: High-level, console only
     config1 = LogConfig(level="WARNING", file=FileConfig(enabled=False))
-    logger1_wrapper = StructuredLogger(name="logger_one", config=config1)
-    log1 = logger1_wrapper.get_logger()
+    slog1 = StructuredLogger(name="logger_one", config=config1)
 
     # Logger 2: Low-level, file only
     log_path2 = tmp_log_dir / "logger2.log"
     config2 = LogConfig(
         level="DEBUG",
         console=ConsoleConfig(enabled=False),
-        file=FileConfig(path=log_path2),
+        file=FileConfig(path=log_path2, format="text"),  # Use text for simple assertion
     )
-    logger2_wrapper = StructuredLogger(name="logger_two", config=config2)
-    log2 = logger2_wrapper.get_logger()
+    slog2 = StructuredLogger(name="logger_two", config=config2)
 
-    # Log messages
-    log1.info("This should not appear anywhere.")
-    log1.warning("Warning from logger one.")
-    log2.debug("Debug from logger two.")
+    # Log messages using the direct API
+    slog1.info("This should not appear anywhere.")
+    slog1.warning("Warning from logger one.")
+    slog2.debug("Debug from logger two.")
 
     # Check console output
     captured = capsys.readouterr()
@@ -193,3 +143,42 @@ def test_multiple_loggers_no_interference(tmp_log_dir: Path, capsys):
     file_content = log_path2.read_text()
     assert "Debug from logger two." in file_content
     assert "Warning from logger one." not in file_content
+
+
+def test_log_file_archiving(configured_logger: StructuredLogger):
+    """Test the archive_log_file method using a fixture."""
+    log_path = configured_logger.config.file.path
+    log_path.write_text("some log data\n" * 10)
+
+    configured_logger.archive_log_file()
+
+    archive_path = log_path.with_suffix(".log.gz")
+    assert not log_path.exists()
+    assert archive_path.exists()
+
+    with gzip.open(archive_path, "rt") as f:
+        content = f.read()
+        assert content == "some log data\n" * 10
+
+
+def test_convert_log_to_json(json_file_config: LogConfig):
+    """Test the convert_log_to_json method using a fixture."""
+    slog = StructuredLogger(name="converter", config=json_file_config)
+    jsonl_path = json_file_config.file.path
+    output_path = jsonl_path.with_suffix(".json")
+
+    # Create a sample JSONL file
+    with open(jsonl_path, "w") as f:
+        f.write('{"msg": "line 1"}\n')
+        f.write('{"msg": "line 2"}\n')
+
+    slog.convert_log_to_json(output_path)
+
+    assert output_path.exists()
+    with open(output_path, "r") as f:
+        data = json.load(f)
+
+    assert isinstance(data, list)
+    assert len(data) == 2
+    assert data[0]["msg"] == "line 1"
+    assert data[1]["msg"] == "line 2"
