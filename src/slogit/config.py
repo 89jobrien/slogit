@@ -37,6 +37,8 @@ class LogConfig(BaseModel):
             config_data = json.load(f)
         return cls(**config_data)
 
+    # TODO: Finish field validator
+
     # @field_validator("level", "file", "console", mode="before")
     # def validate_levels(cls, value):
     #     """Validates that log levels are correct."""

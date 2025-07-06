@@ -1,6 +1,8 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
+# TODO: Write tests for this
+
 
 class AsyncHandler(logging.Handler):
     def __init__(self, handler):
