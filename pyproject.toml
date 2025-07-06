@@ -35,5 +35,5 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project.urls]
-Homepage = "https://github.com/89jobrien/slogger"
-Repository = "https://github.com/89jobrien/slogger"
+Homepage = "https://github.com/89jobrien/slogit"
+Repository = "https://github.com/89jobrien/slogit"

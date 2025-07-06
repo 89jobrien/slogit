@@ -18,8 +18,8 @@ This project uses `uv` for package and environment management.
 1. Clone the repository
 
 ```bash
-git clone https://github.com/89jobrien/slogger
-cd slogger
+git clone https://github.com/89jobrien/slogit
+cd slogit
 ```
 
 2. Create a virtual environment and install dependencies:
@@ -33,13 +33,13 @@ This will install all necessary dependencies listed in pyproject.toml.
 
 ## Quick Start
 
-Using slogger is designed to be straightforward.
+Using `slogit` is designed to be straightforward.
 Instantiate the StructuredLogger with a name and an optional configuration, and then use the standard logging interface.
 
 ```python
 # main.py
 from pathlib import Path
-from slogger import StructuredLogger, LogConfig, ConsoleConfig, FileConfig
+from slogit import StructuredLogger, LogConfig, ConsoleConfig, FileConfig
 
 # 1. Define a configuration (or use the default)
 my_config = LogConfig(
@@ -82,7 +82,7 @@ Logging behavior is controlled by the `LogConfig` Pydantic model. You can config
 Create an instance of `LogConfig` and pass it to the `StructuredLogger`.
 
 ```python
-from slogger import LogConfig, ConsoleConfig, FileConfig
+from slogit import LogConfig, ConsoleConfig, FileConfig
 
 # Disable file logging and only show warnings on the console
 
@@ -118,7 +118,7 @@ You can also manage configurations in a file, which is ideal for different envir
 #### 2. Load it in your application
 
 ```python
-from slogger import StructuredLogger, LogConfig
+from slogit import StructuredLogger, LogConfig
 
 # Load the configuration from the file
 
