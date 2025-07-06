@@ -7,9 +7,9 @@ import shutil
 import sys
 from pathlib import Path
 
-from slogger.config import LogConfig
-from slogger.constants import DEFAULT_LOG_FORMAT
-from slogger.formatters import ColoredFormatter, JSONFormatter
+from slogit.config import LogConfig
+from slogit.constants import DEFAULT_LOG_FORMAT
+from slogit.formatters import ColoredFormatter, JSONFormatter
 
 
 class StructuredLogger:

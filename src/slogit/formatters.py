@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 import colorama
 
-from slogger.models import LogEntry
+from slogit.models import LogEntry
 
 # Initialize colorama
 colorama.init(autoreset=True)

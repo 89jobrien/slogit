@@ -1,6 +1,6 @@
-# Slogger: A Simple, Structured Logging Library for Python
+# Slogit: A Simple, Structured Logging Library for Python
 
-Slogger is a logging library for Python that makes structured, configurable logging simple and intuitive.
+Slogit is a logging library for Python that makes structured, configurable logging simple and intuitive.
 
 ## Features
 

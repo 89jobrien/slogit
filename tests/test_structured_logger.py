@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from slogger.config import (
+from slogit.config import (
     ConsoleConfig,
     FileConfig,
     LogConfig,
 )
-from slogger.logger import StructuredLogger
+from slogit.logger import StructuredLogger
 
 
 @pytest.fixture
