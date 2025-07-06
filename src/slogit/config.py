@@ -60,36 +60,3 @@ class LogConfig(BaseModel):
         with open(path, "r") as f:
             config_data = json.load(f)
         return cls(**config_data)
-
-
-# import logging
-
-# from pydantic import BaseModel, Field, field_validator
-
-
-# class LogConfig(BaseModel):
-#     """Configuration for the structured logger."""
-
-#     log_file: str = Field(default="app_log.jsonl")
-#     level: str = Field(default=logging.INFO)
-#     use_color: bool = Field(default=True)
-#     use_json: bool = Field(default=False)
-
-#     @field_validator("log_file")
-#     def validate_log_file(cls, v):
-#         if not v.endswith(".jsonl"):
-#             raise ValueError("Log file must have a .jsonl extension")
-#         return v
-
-#     @field_validator("level")
-#     def validate_level(cls, v):
-#         if v not in [
-#             "debug",
-#             "info",
-#             "warn",
-#             "warning",
-#             "error",
-#             "critical",
-#         ]:
-#             raise ValueError("Invalid logging level")
-#         return v
