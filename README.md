@@ -6,7 +6,7 @@ Disclaimer: This is a work in progress and not intended for production applicati
 
 ## Features
 
-- Structured JSON Logging: Automatically formats logs into JSON lines (`.jsonl`), perfect for log aggregation services like Datadog, Splunk, or the ELK stack.
+- Structured JSON Logging: Automatically formats logs into JSON lines (`.jsonl`).
 - Colored Console Output: Provides level-differentiated, human-readable logs in the console during development.
 - Configuration as Code: Uses Pydantic models for a type-safe, validated, and easily-serializable configuration.
 - Log Rotation: Built-in support for `RotatingFileHandler` to manage log file size and backups automatically.
