@@ -124,12 +124,6 @@ if __name__ == "__main__":
 Output in `logs/your_app.jsonl`:
 
 ```json
-{"timestamp":"2025-07-06T04:36:49.884610Z","level":" INFO","message":"This is an INFO message.","logger_name":"prod_app","pathname":"/path/to/your/prod_app/main.py","line":20,"function":"main","exception":null,"stack_info":null,"extra":{}}
-```
-
-Formatted JSON:
-
-```json
 {
   "timestamp": "2025-07-06T04:36:49.884610Z",
   "level": " INFO",
